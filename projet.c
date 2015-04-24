@@ -16,10 +16,10 @@
 #define YMAX 300
 #define ZMAX 500
 
-#define NB_ENM 10
+#define NB_ENM 40
 #define SIZE_ENM 10
 #define SIZE_MISSILE 8
-#define SPEED_MISSILE 8
+#define SPEED_MISSILE 2
 
 #define ESC 27
 #define SPACE_BAR 32
@@ -48,7 +48,7 @@ void display_Obs_Affiche();
 void display_missiles_ennemis();
 
 GLMmodel *model_tie=NULL, *model_missile=NULL;
-int pause = 0, level = 0, another_shoot = 1, display_missile = 1, hp = 3;
+int pause = 0, level = 0, another_shoot = 1, display_missile = 1, hp = 3, shoot_enm=0;
 //another_shoot : tirer à nouveau ?		display_missile : afficher le misssile ? (cas de collision)
 GLuint idBoDecor = 0, idBoFond = 0, idBoEnnemis = 0, idBoFace = 0, idBoSommets = 0;
 static GLfloat camx = 0.0, camy = YMAX/2, camz = ZMAX, missile_x, missile_y, missile_z;
@@ -313,7 +313,7 @@ void display_model(){
 	}
 	
 	//Affichage du missile lancé depuis le vaisseau
-	if(missile_x!=0 && missile_y!=0 && missile_z!=0 && display_missile){
+	if(/*missile_x!=0 && missile_y!=0 && missile_z!=0 && */display_missile){
 		glPushMatrix();
 		glTranslatef(missile_x, missile_y, missile_z);
 		drawModel(1);
@@ -385,11 +385,11 @@ void keyboard (unsigned char key, int x, int y) {
 		case 'p' :
 			if(pause==0){
 				glutIdleFunc(NULL);
-				//glutSpecialFunc(NULL);
+				glutSpecialFunc(NULL);
 				pause = 1;
 			}else{
 				glutIdleFunc(idle);
-				//glutSpecialFunc(SpecialInput);
+				glutSpecialFunc(SpecialInput);
 				pause = 0;
 			}
 			break;
@@ -426,7 +426,7 @@ void detectCollision(){
 			if ((camx<=Obs[i].x+SIZE_ENM) && (camx>=Obs[i].x-SIZE_ENM) &&
 			(camy<=Obs[i].y+SIZE_ENM) && (camy>=Obs[i].y-SIZE_ENM) &&
 			(camz<=Obs[i].z+SIZE_ENM) && (camz>=Obs[i].z-SIZE_ENM)){
-				INFO("Collision\n");
+				printf("You're dead, Captain but %d ennemies are dead with you\n",shoot_enm);
 				exit(0);
 			}
 			
@@ -438,6 +438,7 @@ void detectCollision(){
 				another_shoot = 1;
 				display_Obs_Affiche();
 				display_missile = 0;
+				shoot_enm++;
 			}
 			
 			//Collision missile-vaisseau
@@ -451,13 +452,13 @@ void detectCollision(){
 				Missiles_enm[i].another_shoot=1; //l'ennemi peut tirer un autre missile
 				shoot_ennemis(); //réinitialisation de la postion du missile
 				}else{
-					printf("You're dead, Captain \n");
+					printf("You're dead, Captain but %d ennemies are dead with you\n",shoot_enm);
 					exit(0);
 				}
 			}
 			
 			//Collision missile-missile
-			/*if ((missile_x<=Missiles_enm[i].x+SIZE_MISSILE) && (missile_x>=Missiles_enm[i].x-SIZE_MISSILE) &&
+			if ((missile_x<=Missiles_enm[i].x+SIZE_MISSILE) && (missile_x>=Missiles_enm[i].x-SIZE_MISSILE) &&
 			(missile_y<=Missiles_enm[i].y+SIZE_MISSILE) && (missile_y>=Missiles_enm[i].y-SIZE_MISSILE) &&
 			(missile_z<=Missiles_enm[i].z+SIZE_MISSILE) && (missile_z>=Missiles_enm[i].z-SIZE_MISSILE)){
 				another_shoot = 1;
@@ -466,14 +467,14 @@ void detectCollision(){
 				
 				Missiles_enm[i].another_shoot=1;
 				Missiles_enm[i].display=0;
-			}*/
+			}
 		}
 	}
 }
 
 //effectue le mouvement automatique du vaisseau et des missiles (alliés et ennemis)
 void idle(){
-	if(camz == 100){
+	if(camz < 100){
 		printf("Level %d completed\n",level);
 		level++;
 		
@@ -498,7 +499,7 @@ void idle(){
 		int i;
 		for(i=0; i<NB_ENM; i++){
 			//Mouvement du missile
-			if(Obs_Affiche[i] && Missiles_enm[i].x!=0 && Missiles_enm[i].y!=0 && Missiles_enm[i].z!=0) Missiles_enm[i].z+=SPEED_MISSILE;
+			if(/*Obs_Affiche[i] && */Missiles_enm[i].x!=0 && Missiles_enm[i].y!=0 && Missiles_enm[i].z!=0) Missiles_enm[i].z+=SPEED_MISSILE;
 			//Si le missile ennemi passe derrière le joueur, l'ennemi peut tirer un autre missile
 			if(Missiles_enm[i].z > camz){
 				Missiles_enm[i].another_shoot=1;
@@ -512,7 +513,7 @@ void idle(){
 
 //gère le tir du joueur
 void shoot(){
-	printf("another_shoot=%d display_missile=%d x=%f y=%f z=%f\n",another_shoot,display_missile,missile_x,missile_y,missile_z);
+	INFO("another_shoot=%d display_missile=%d x=%f y=%f z=%f\n",another_shoot,display_missile,missile_x,missile_y,missile_z);
 	if(another_shoot){
 		another_shoot = 0;
 		display_missile = 1;
